@@ -45,7 +45,7 @@ pub struct ActivityManager {
 
 impl ActivityManager {
     fn init(&mut self) -> Result<()> {
-        let child = Command::new("presence.exe")
+        let child = Command::new("presence")
             .stdin(Stdio::piped())
             .stderr(Stdio::inherit())
             .spawn()?;
