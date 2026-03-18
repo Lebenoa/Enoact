@@ -4,6 +4,8 @@ use std::process::{Child, ChildStdin, Command, Stdio};
 use anyhow::Result;
 use discord_rich_presence::activity::Activity;
 
+const PRESENCE_BIN: &str = "enoact-presence";
+
 struct PresenceInstance {
     child: Child,
     stdin: BufWriter<ChildStdin>,
@@ -45,7 +47,7 @@ pub struct ActivityManager {
 
 impl ActivityManager {
     fn init(&mut self) -> Result<()> {
-        let child = Command::new("presence")
+        let child = Command::new(PRESENCE_BIN)
             .stdin(Stdio::piped())
             .stderr(Stdio::inherit())
             .spawn()?;
