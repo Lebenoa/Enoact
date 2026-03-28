@@ -55,11 +55,7 @@ impl ActivityManager {
         let mut ins = PresenceInstance::new(child)?;
 
         let client_id = crate::client_id::get();
-        if let Err(e) = ins.write(client_id.as_bytes()) {
-            crate::client_id::free(client_id);
-            ins.cleanup()?;
-            return Err(e.into());
-        }
+        ins.write(client_id.as_bytes())?;
         self.instance = Some(ins);
         self.client_id = client_id;
 
@@ -109,5 +105,18 @@ impl ActivityManager {
         }
         crate::client_id::free(self.client_id);
         Ok(())
+    }
+}
+
+impl Drop for ActivityManager {
+    fn drop(&mut self) {
+        if let Some(mut ins) = self.instance.take() {
+            let status = ins.child.try_wait().unwrap();
+            if status.is_none() {
+                ins.child.kill().unwrap();
+            }
+        }
+        crate::client_id::free(self.client_id);
+        tracing::debug!("Dropped ActivityManager for `{}`", self.client_id);
     }
 }

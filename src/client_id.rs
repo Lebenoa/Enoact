@@ -1,47 +1,44 @@
-use std::sync::LazyLock;
+use std::sync::{LazyLock, Mutex};
 
-use dashmap::DashMap;
-
-static APP_IDS: LazyLock<DashMap<u8, Vec<&'static str>>> = LazyLock::new(|| {
-    let map = DashMap::new();
-    map.insert(
-        0,
-        vec![
-            "1420250165960507492",
-            "1398619981377175663",
-            "1409423773362421820",
-            "1454860736646877386",
-        ],
-    );
-    map.insert(1, vec![]);
-
-    map
+static FREE_APP_IDS: LazyLock<Mutex<Vec<&'static str>>> = LazyLock::new(|| {
+    Mutex::new(Vec::from_iter([
+        "1420250165960507492",
+        "1398619981377175663",
+        "1409423773362421820",
+        "1454860736646877386",
+    ]))
 });
+static USED_APP_IDS: LazyLock<Mutex<Vec<&'static str>>> = LazyLock::new(|| Mutex::new(Vec::new()));
 
 pub(crate) fn get() -> &'static str {
-    let id = APP_IDS.get_mut(&0).unwrap().pop();
+    let id = FREE_APP_IDS.lock().unwrap().pop();
     if let Some(id) = id {
-        APP_IDS.get_mut(&1).unwrap().push(id);
+        USED_APP_IDS.lock().unwrap().push(id);
+        tracing::debug!("`{id}` in USED");
         return id;
     }
 
-    APP_IDS.get(&1).unwrap().first().unwrap()
+    let id = USED_APP_IDS.lock().unwrap().pop().unwrap();
+    tracing::debug!("`Recycle {id}` from USED");
+    id
 }
 
 pub(crate) fn free(id: &'static str) {
     {
-        let mut vec = APP_IDS.get_mut(&1).unwrap();
+        let mut vec = USED_APP_IDS.lock().unwrap();
         let used_index = vec.iter().position(|i| *i == id);
 
         if let Some(index) = used_index {
             vec.remove(index);
+            tracing::debug!("Removed `{id}` from USED");
         }
     }
 
     {
-        let mut vec = APP_IDS.get_mut(&0).unwrap();
+        let mut vec = FREE_APP_IDS.lock().unwrap();
         if !vec.contains(&id) {
             vec.push(id);
+            tracing::debug!("`{id}` in FREE");
         }
     }
 }
