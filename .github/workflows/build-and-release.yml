@@ -89,7 +89,7 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          upload_url: ${{ needs.create-release.outputs.upload_url }}
           asset_path: ${{ matrix.os == 'ubuntu-latest' && './enoact-linux-x86_64.tar.gz' || './enoact-windows-x86_64.7z' }}
           asset_name: ${{ matrix.os == 'ubuntu-latest' && 'enoact-linux-x86_64.tar.gz' || 'enoact-windows-x86_64.7z' }}
           asset_content_type: ${{ matrix.os == 'ubuntu-latest' && 'application/gzip' || 'application/x-7z-compressed' }}
