@@ -28,7 +28,7 @@ bun run build
 
 ### Build the executable
 
-2. Run the following
+5. Run the following
 
 ```nushell
 cargo b -r
