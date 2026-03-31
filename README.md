@@ -7,16 +7,27 @@ It can display up to 4 different activities with different app name (if you need
 
 <img width="475" height="348" alt="image" src="https://github.com/user-attachments/assets/9159f271-2c4c-4e18-ae41-62b6d3d02cfd" />
 
-## Consideration
-
-- Set/Clear via HTTP request
-  > This was implemented but later removed as it is unreliable to clear an activity
-
 ## How to build
 
-> How you build Rust normally
-
 1. Clone this repo
+   
+> [!IMPORTANT]  
+> Web UI is currently required to build final executable
+
+### Build Web UI
+
+2. Install `node`, `bun` or alternatives
+3. Install web UI dependencies
+```nushell
+bun install
+```
+4. Build using command below
+```nushell
+bun run build
+```
+
+### Build the executable
+
 2. Run the following
 
 ```nushell
