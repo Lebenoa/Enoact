@@ -1,11 +1,10 @@
 use axum::response::{Html, IntoResponse};
-use std::fs;
 
 // '/'
 pub async fn index() -> impl IntoResponse {
     #[cfg(debug_assertions)]
     {
-        let html_content = fs::read_to_string("./web-ui/build/index.html")
+        let html_content = std::fs::read_to_string("./web-ui/build/index.html")
             .expect("Failed to read index.html during development");
         Html(html_content)
     }
