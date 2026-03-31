@@ -77,7 +77,7 @@ jobs:
         with:
             draft: true
             files: |
-                './enoact-linux-x86_64.tar.gz'
+                ./enoact-linux-x86_64.tar.gz
 
       - name: Create Release (Windows)
         uses: softprops/action-gh-release@v2
@@ -85,4 +85,4 @@ jobs:
         with:
             draft: true
             files: |
-                './enoact-windows-x86_64.7z'
+                ./enoact-windows-x86_64.7z
