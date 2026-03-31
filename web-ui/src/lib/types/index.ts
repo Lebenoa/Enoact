@@ -52,7 +52,7 @@ export type Activity = {
     assets?: Assets;
     secrets?: Secrets;
     buttons?: Button[];
-    activity_type?: ActivityType;
+    type?: ActivityType;
     status_display_type?: StatusDisplayType;
 }
 

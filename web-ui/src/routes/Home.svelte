@@ -117,22 +117,7 @@
             {/snippet}
             <Input type="text" bind:value={activity.name} />
         </Label>
-        <Label>
-            {#snippet label()}
-                <span>State</span>
-            {/snippet}
-            <Input type="text" bind:value={activity.state} />
-        </Label>
-        {#if activity.state}
-            <div class="w-full" transition:scale>
-                <Label>
-                    {#snippet label()}
-                        <span>State URL</span>
-                    {/snippet}
-                    <Input type="text" bind:value={activity.state_url} />
-                </Label>
-            </div>
-        {/if}
+
         <Label>
             {#snippet label()}
                 <span>Details</span>
@@ -149,6 +134,24 @@
                 </Label>
             </div>
         {/if}
+
+        <Label>
+            {#snippet label()}
+                <span>State</span>
+            {/snippet}
+            <Input type="text" bind:value={activity.state} />
+        </Label>
+        {#if activity.state}
+            <div class="w-full" transition:scale>
+                <Label>
+                    {#snippet label()}
+                        <span>State URL</span>
+                    {/snippet}
+                    <Input type="text" bind:value={activity.state_url} />
+                </Label>
+            </div>
+        {/if}
+
         <Label>
             {#snippet label()}
                 <span>Activity Type</span>
@@ -157,9 +160,9 @@
                 onchange={(e) => {
                     const enumValue = parseInt(e.currentTarget.value);
                     if (isNaN(enumValue)) {
-                        activity.activity_type = ActivityType.Playing;
+                        activity.type = ActivityType.Playing;
                     } else {
-                        activity.activity_type = enumValue as ActivityType;
+                        activity.type = enumValue as ActivityType;
                     }
                 }}
             >
@@ -184,8 +187,8 @@
                 }}
             >
                 <option value="0">Name</option>
-                <option value="1">State</option>
                 <option value="2">Details</option>
+                <option value="1">State</option>
             </Select>
         </Label>
         <Button
@@ -341,7 +344,7 @@
 <div class="flex flex-col h-fit my-auto gap-2 bg-black/20 px-4 py-2 cursor-pointer">
     <p>
         {formatActivityType(
-            activity.activity_type ? activity.activity_type : ActivityType.Playing,
+            activity.type ? activity.type : ActivityType.Playing,
             activity.status_display_type ? activity.status_display_type : StatusDisplayType.Name,
             activity.name ? activity.name : "[Default App Name]",
             activity.state,
@@ -380,8 +383,8 @@
             </div>
         {/if}
         <div class="flex flex-col ml-2">
-            <h4 class="text-xl font-bold">{activity.state}</h4>
-            <p>{activity.details}</p>
+            <h4 class="text-xl font-bold">{activity.details}</h4>
+            <p>{activity.state}</p>
             {#if activity.timestamps?.start}
                 <div class="flex flex-row gap-2">
                     <p>
