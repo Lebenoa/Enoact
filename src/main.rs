@@ -19,10 +19,15 @@ async fn main() {
         .with_env_filter("enoact=debug")
         .init();
 
+    let api_router = Router::new()
+        .route("/active-app-ids", get(route::api::active_app_ids))
+        .route("/set-presence", post(route::api::set_presence))
+        .route("/clear-presence", post(route::api::clear_presence));
+
     let app = Router::new()
         .route("/", get(route::index))
-        .route("/set-presence", post(route::set_presence))
-        .route("/ws", any(route::upgrade_handler));
+        .route("/ws", any(route::upgrade_handler))
+        .nest("/api", api_router);
 
     let listener = tokio::net::TcpListener::bind(BIND_ENDPOINT).await.unwrap();
     tracing::info!("Listening on {BIND_ENDPOINT}");

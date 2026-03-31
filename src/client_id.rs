@@ -43,6 +43,7 @@ impl Borrow<str> for ClientId {
 
 impl Drop for ClientId {
     fn drop(&mut self) {
+        tracing::debug!("`Drop` trait called for ClientId: {}", self.0);
         let removed = {
             let mut vec = USED_APP_IDS.lock().unwrap();
             let used_index = vec.iter().position(|i| *i == self.0);

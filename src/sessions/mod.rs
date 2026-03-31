@@ -10,7 +10,7 @@ use crate::activity_manager::PRESENCE_BIN;
 use crate::client_id::ClientId;
 
 pub struct HttpActivity<'a> {
-    activity: Activity<'a>,
+    pub activity: Activity<'a>,
     child: Child,
 }
 
@@ -38,6 +38,15 @@ pub fn new_session(activity: Activity<'static>) -> Result<String> {
     HTTP_PRESENCE.insert(client_id, HttpActivity { activity, child });
 
     Ok(to_be_return)
+}
+
+pub fn clear_presence(client_id: &str) -> Result<()> {
+    if let Some((_, mut http_activity)) = HTTP_PRESENCE.remove(client_id) {
+        http_activity.child.kill()?;
+        Ok(())
+    } else {
+        Err(anyhow::anyhow!("Client ID not found"))
+    }
 }
 
 pub fn set_presence(client_id: &str, activity: Activity<'static>) -> Result<()> {
