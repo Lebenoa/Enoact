@@ -1,0 +1,77 @@
+name: Build and Release
+
+on:
+  push:
+    tags:
+      - "*"
+
+jobs:
+  build-and-release:
+    name: Build and Release
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+
+    steps:
+      # Checkout the repository
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      # Set up Bun
+      - name: Set up Bun
+        uses: oven-sh/setup-bun@v1
+        with:
+          bun-version: latest
+
+      # Install dependencies and build the web UI
+      - name: Install dependencies and build web UI
+        working-directory: ./web-ui
+        run: |
+          bun install
+          bun run build
+
+      # Set up Rust
+      - name: Set up Rust
+        uses: actions-rs/toolchain@v1
+        with:
+          toolchain: stable
+          override: true
+
+      # Build the Rust project
+      - name: Build Rust project
+        run: cargo build --release
+
+      # Compress the build artifacts
+      - name: Compress build artifacts
+        run: |
+          mkdir -p release
+          cp -r target/release/enoact ./release/
+          cp -r web-ui/dist ./release/web-ui
+          if [[ "${{ matrix.os }}" == "ubuntu-latest" ]]; then
+            tar -czvf release-linux.tar.gz -C ./release .
+          else
+            7z a release-windows.7z ./release || zip -r release-windows.zip ./release
+
+      # Upload the compressed file as a release asset
+      - name: Create Release
+        if: ${{ matrix.os == 'ubuntu-latest' }}
+        id: create_release
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: ${{ github.ref_name }}
+          release_name: Release ${{ github.ref_name }}
+          draft: false
+          prerelease: false
+
+      - name: Upload Release Asset
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: ${{ matrix.os == 'ubuntu-latest' && './release-linux.tar.gz' || './release-windows.7z' }}
+          asset_name: ${{ matrix.os == 'ubuntu-latest' && 'release-linux.tar.gz' || 'release-windows.7z' }}
+          asset_content_type: ${{ matrix.os == 'ubuntu-latest' && 'application/gzip' || 'application/x-7z-compressed' }}
