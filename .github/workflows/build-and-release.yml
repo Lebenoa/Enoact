@@ -69,12 +69,20 @@ jobs:
           mkdir release
           cp target\release\enoact.exe release\
           cp target\release\enoact-presence.exe release\
-          7z a enoact-windows-x86_64.7z release || powershell Compress-Archive -Path release\* -DestinationPath enoact-windows-x86_64.zip
+          7z a enoact-windows-x86_64.7z release
 
-      - name: Create Release
+      - name: Create Release (Linux)
         uses: softprops/action-gh-release@v2
+        if: ${{ matrix.os == 'ubuntu-latest' }}
         with:
             draft: true
             files: |
-                ${{ matrix.os == 'ubuntu-latest' && './enoact-linux-x86_64.tar.gz' }}
-                ${{ matrix.os == 'windows-latest' && './enoact-windows-x86_64.7z || ./enoact-windows-x86_64.zip' }}
+                './enoact-linux-x86_64.tar.gz'
+
+      - name: Create Release (Windows)
+        uses: softprops/action-gh-release@v2
+        if: ${{ matrix.os == 'windows-latest' }}
+        with:
+            draft: true
+            files: |
+                './enoact-windows-x86_64.7z'
