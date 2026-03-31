@@ -12,6 +12,8 @@ jobs:
     strategy:
       matrix:
         os: [ubuntu-latest, windows-latest]
+    env:
+      FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
 
     steps:
       # Checkout the repository
@@ -46,12 +48,14 @@ jobs:
       - name: Compress build artifacts
         run: |
           mkdir -p release
-          cp -r target/release/enoact ./release/
-          cp -r web-ui/dist ./release/web-ui
           if [[ "${{ matrix.os }}" == "ubuntu-latest" ]]; then
-            tar -czvf release-linux.tar.gz -C ./release .
+            cp target/release/enoact ./release/
+            cp target/release/enoact-presence ./release/
+            tar -czvf enoact-linux-x86_64.tar.gz -C ./release .
           else
-            7z a release-windows.7z ./release || zip -r release-windows.zip ./release
+            cp target/release/enoact.exe ./release/
+            cp target/release/enoact-presence.exe ./release/
+            7z a enoact-windows-x86_64.7z ./release || zip -r enoact-windows-x86_64.zip ./release
 
       # Upload the compressed file as a release asset
       - name: Create Release
@@ -72,6 +76,6 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: ${{ matrix.os == 'ubuntu-latest' && './release-linux.tar.gz' || './release-windows.7z' }}
-          asset_name: ${{ matrix.os == 'ubuntu-latest' && 'release-linux.tar.gz' || 'release-windows.7z' }}
+          asset_path: ${{ matrix.os == 'ubuntu-latest' && './enoact-linux-x86_64.tar.gz' || './enoact-windows-x86_64.7z' }}
+          asset_name: ${{ matrix.os == 'ubuntu-latest' && 'enoact-linux-x86_64.tar.gz' || 'enoact-windows-x86_64.7z' }}
           asset_content_type: ${{ matrix.os == 'ubuntu-latest' && 'application/gzip' || 'application/x-7z-compressed' }}
