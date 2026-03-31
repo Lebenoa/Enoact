@@ -58,18 +58,16 @@ jobs:
       - name: Compress build artifacts (Linux)
         if: ${{ matrix.os == 'ubuntu-latest' }}
         run: |
-          mkdir -p release
-          cp target/release/enoact ./release/
-          cp target/release/enoact-presence ./release/
-          tar -czvf enoact-linux-x86_64.tar.gz -C ./release .
+          cp target/release/enoact .
+          cp target/release/enoact-presence .
+          tar -czvf enoact-linux-x86_64.tar.gz enoact enoact-presence
 
       - name: Compress build artifacts (Windows)
         if: ${{ matrix.os == 'windows-latest' }}
         run: |
-          mkdir release
-          cp target\release\enoact.exe release\
-          cp target\release\enoact-presence.exe release\
-          7z a enoact-windows-x86_64.7z release
+          cp target\release\enoact.exe .
+          cp target\release\enoact-presence.exe .
+          7z a enoact-windows-x86_64.7z enoact.exe enoact-presence.exe
 
       - name: Create Release (Linux)
         uses: softprops/action-gh-release@v2
