@@ -5,6 +5,11 @@ on:
     tags:
       - "*"
   workflow_dispatch:
+    inputs:
+      tag:
+        description: "Tag to build (leave empty for latest tag)"
+        required: false
+        default: ${{ github.ref_name }}
 
 permissions:
   contents: write
@@ -23,6 +28,8 @@ jobs:
       # Checkout the repository
       - name: Checkout code
         uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.inputs.tag || github.ref_name }}
 
       # Set up Bun
       - name: Set up Bun
@@ -49,18 +56,21 @@ jobs:
         run: cargo build --release
 
       # Compress the build artifacts
-      - name: Compress build artifacts
+      - name: Compress build artifacts (Linux)
+        if: ${{ matrix.os == 'ubuntu-latest' }}
         run: |
           mkdir -p release
-          if [[ "${{ matrix.os }}" == "ubuntu-latest" ]]; then
-            cp target/release/enoact ./release/
-            cp target/release/enoact-presence ./release/
-            tar -czvf enoact-linux-x86_64.tar.gz -C ./release .
-          else
-            cp target/release/enoact.exe ./release/
-            cp target/release/enoact-presence.exe ./release/
-            7z a enoact-windows-x86_64.7z ./release || zip -r enoact-windows-x86_64.zip ./release
-          fi
+          cp target/release/enoact ./release/
+          cp target/release/enoact-presence ./release/
+          tar -czvf enoact-linux-x86_64.tar.gz -C ./release .
+
+      - name: Compress build artifacts (Windows)
+        if: ${{ matrix.os == 'windows-latest' }}
+        run: |
+          mkdir release
+          cp target\release\enoact.exe release\
+          cp target\release\enoact-presence.exe release\
+          7z a enoact-windows-x86_64.7z release || powershell Compress-Archive -Path release\* -DestinationPath enoact-windows-x86_64.zip
 
       # Upload the compressed file as a release asset
       - name: Create Release
