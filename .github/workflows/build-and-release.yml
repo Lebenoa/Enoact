@@ -26,13 +26,13 @@ jobs:
     steps:
       # Checkout the repository
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
         with:
           ref: ${{ github.ref_name }}
 
       # Set up Bun
       - name: Set up Bun
-        uses: oven-sh/setup-bun@v1
+        uses: oven-sh/setup-bun@v2
         with:
           bun-version: latest
 
@@ -71,25 +71,10 @@ jobs:
           cp target\release\enoact-presence.exe release\
           7z a enoact-windows-x86_64.7z release || powershell Compress-Archive -Path release\* -DestinationPath enoact-windows-x86_64.zip
 
-      # Upload the compressed file as a release asset
       - name: Create Release
-        if: ${{ matrix.os == 'ubuntu-latest' }}
-        id: create_release
-        uses: actions/create-release@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        uses: softprops/action-gh-release@v2
         with:
-          tag_name: ${{ github.ref_name }}
-          release_name: Release ${{ github.ref_name }}
-          draft: true
-          prerelease: false
-
-      - name: Upload Release Asset
-        uses: actions/upload-release-asset@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: ${{ matrix.os == 'ubuntu-latest' && './enoact-linux-x86_64.tar.gz' || './enoact-windows-x86_64.7z' }}
-          asset_name: ${{ matrix.os == 'ubuntu-latest' && 'enoact-linux-x86_64.tar.gz' || 'enoact-windows-x86_64.7z' }}
-          asset_content_type: ${{ matrix.os == 'ubuntu-latest' && 'application/gzip' || 'application/x-7z-compressed' }}
+            draft: true
+            files: |
+                ${{ matrix.os == 'ubuntu-latest' && './enoact-linux-x86_64.tar.gz' }}
+                ${{ matrix.os == 'windows-latest' && './enoact-windows-x86_64.7z || ./enoact-windows-x86_64.zip' }}
