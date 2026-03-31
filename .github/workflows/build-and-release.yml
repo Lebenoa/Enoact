@@ -8,8 +8,7 @@ on:
     inputs:
       tag:
         description: "Tag to build (leave empty for latest tag)"
-        required: false
-        default: ${{ github.ref_name }}
+        required: true
 
 permissions:
   contents: write
