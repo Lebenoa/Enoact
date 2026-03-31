@@ -13,10 +13,15 @@ const BIND_ENDPOINT: &str = "0.0.0.0:5579";
 
 #[tokio::main]
 async fn main() {
+    #[cfg(debug_assertions)]
+    let level = tracing::Level::DEBUG;
+
+    #[cfg(not(debug_assertions))]
+    let level = tracing::Level::INFO;
+
     tracing_subscriber::fmt()
-        .with_max_level(tracing::Level::DEBUG)
+        .with_max_level(level)
         .with_line_number(true)
-        .with_env_filter("enoact=debug")
         .init();
 
     let api_router = Router::new()

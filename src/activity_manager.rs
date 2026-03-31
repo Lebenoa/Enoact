@@ -42,7 +42,6 @@ impl PresenceInstance {
     }
 }
 
-#[derive(Default)]
 pub struct ActivityManager {
     client_id: ClientId,
     instance: Option<PresenceInstance>,
@@ -57,16 +56,17 @@ impl ActivityManager {
 
         let mut ins = PresenceInstance::new(child)?;
 
-        let client_id = ClientId::new();
-        ins.write(client_id.as_bytes())?;
+        ins.write(self.client_id.as_bytes())?;
         self.instance = Some(ins);
-        self.client_id = client_id;
 
         Ok(())
     }
 
     pub fn new() -> Result<Self> {
-        let mut ins = ActivityManager::default();
+        let mut ins = ActivityManager {
+            client_id: ClientId::new(),
+            instance: None,
+        };
         ins.init()?;
         Ok(ins)
     }
@@ -99,11 +99,8 @@ impl ActivityManager {
     }
 
     pub fn clear(&mut self) -> Result<()> {
-        if let Some(mut ins) = self.instance.take() {
-            let status = ins.child.try_wait()?;
-            if status.is_none() {
-                ins.child.kill()?;
-            }
+        if let Some(ins) = self.instance.take() {
+            ins.cleanup()?;
         }
         Ok(())
     }
