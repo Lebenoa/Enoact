@@ -57,6 +57,7 @@ jobs:
             cp target/release/enoact.exe ./release/
             cp target/release/enoact-presence.exe ./release/
             7z a enoact-windows-x86_64.7z ./release || zip -r enoact-windows-x86_64.zip ./release
+          fi
 
       # Upload the compressed file as a release asset
       - name: Create Release
