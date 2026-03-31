@@ -4,7 +4,9 @@ use std::process::{Child, ChildStdin, Command, Stdio};
 use anyhow::Result;
 use discord_rich_presence::activity::Activity;
 
-const PRESENCE_BIN: &str = "enoact-presence";
+use crate::client_id::ClientId;
+
+pub const PRESENCE_BIN: &str = "enoact-presence";
 
 struct PresenceInstance {
     child: Child,
@@ -23,6 +25,7 @@ impl PresenceInstance {
         })
     }
 
+    // Prevent zombie process
     fn cleanup(mut self) -> Result<()> {
         let status = self.child.try_wait()?;
         if status.is_none() {
@@ -41,7 +44,7 @@ impl PresenceInstance {
 
 #[derive(Default)]
 pub struct ActivityManager {
-    client_id: &'static str,
+    client_id: ClientId,
     instance: Option<PresenceInstance>,
 }
 
@@ -54,7 +57,7 @@ impl ActivityManager {
 
         let mut ins = PresenceInstance::new(child)?;
 
-        let client_id = crate::client_id::get();
+        let client_id = ClientId::new();
         ins.write(client_id.as_bytes())?;
         self.instance = Some(ins);
         self.client_id = client_id;
@@ -81,7 +84,6 @@ impl ActivityManager {
 
             if let Err(e) = write_error {
                 self.instance.take().unwrap().cleanup()?;
-                crate::client_id::free(self.client_id);
                 match e.kind() {
                     ErrorKind::BrokenPipe => continue,
                     _ => {
@@ -103,20 +105,14 @@ impl ActivityManager {
                 ins.child.kill()?;
             }
         }
-        crate::client_id::free(self.client_id);
         Ok(())
     }
 }
 
 impl Drop for ActivityManager {
     fn drop(&mut self) {
-        if let Some(mut ins) = self.instance.take() {
-            let status = ins.child.try_wait().unwrap();
-            if status.is_none() {
-                ins.child.kill().unwrap();
-            }
+        if let Some(ins) = self.instance.take() {
+            ins.cleanup().unwrap();
         }
-        crate::client_id::free(self.client_id);
-        tracing::debug!("Dropped ActivityManager for `{}`", self.client_id);
     }
 }

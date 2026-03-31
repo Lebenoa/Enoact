@@ -1,4 +1,8 @@
-use std::sync::{LazyLock, Mutex};
+use std::{
+    borrow::{Borrow, Cow},
+    fmt::Display,
+    sync::{LazyLock, Mutex},
+};
 
 static FREE_APP_IDS: LazyLock<Mutex<Vec<&'static str>>> = LazyLock::new(|| {
     Mutex::new(Vec::from_iter([
@@ -10,35 +14,73 @@ static FREE_APP_IDS: LazyLock<Mutex<Vec<&'static str>>> = LazyLock::new(|| {
 });
 static USED_APP_IDS: LazyLock<Mutex<Vec<&'static str>>> = LazyLock::new(|| Mutex::new(Vec::new()));
 
-pub(crate) fn get() -> &'static str {
-    let id = FREE_APP_IDS.lock().unwrap().pop();
-    if let Some(id) = id {
-        USED_APP_IDS.lock().unwrap().push(id);
-        tracing::debug!("`{id}` in USED");
-        return id;
-    }
+#[derive(Clone, Eq, PartialEq, Default, Hash)]
+pub struct ClientId(pub Cow<'static, str>);
 
-    let id = USED_APP_IDS.lock().unwrap().pop().unwrap();
-    tracing::debug!("`Recycle {id}` from USED");
-    id
+impl Display for ClientId {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{}", self.0)
+    }
 }
 
-pub(crate) fn free(id: &'static str) {
-    {
-        let mut vec = USED_APP_IDS.lock().unwrap();
-        let used_index = vec.iter().position(|i| *i == id);
+impl From<&'static str> for ClientId {
+    fn from(id: &'static str) -> Self {
+        ClientId(id.into())
+    }
+}
 
-        if let Some(index) = used_index {
-            vec.remove(index);
-            tracing::debug!("Removed `{id}` from USED");
+impl From<String> for ClientId {
+    fn from(id: String) -> Self {
+        ClientId(id.into())
+    }
+}
+
+impl Borrow<str> for ClientId {
+    fn borrow(&self) -> &str {
+        &self.0
+    }
+}
+
+impl Drop for ClientId {
+    fn drop(&mut self) {
+        let removed = {
+            let mut vec = USED_APP_IDS.lock().unwrap();
+            let used_index = vec.iter().position(|i| *i == self.0);
+
+            used_index.map(|index| vec.remove(index))
+        };
+
+        if let Some(id) = removed {
+            let mut vec = FREE_APP_IDS.lock().unwrap();
+            if !vec.contains(&id) {
+                vec.push(id);
+            }
         }
     }
+}
 
-    {
-        let mut vec = FREE_APP_IDS.lock().unwrap();
-        if !vec.contains(&id) {
-            vec.push(id);
-            tracing::debug!("`{id}` in FREE");
+impl ClientId {
+    pub fn new() -> Self {
+        let id = FREE_APP_IDS.lock().unwrap().pop();
+        if let Some(id) = id {
+            USED_APP_IDS.lock().unwrap().push(id);
+            return id.into();
         }
+
+        let id = USED_APP_IDS.lock().unwrap().pop().unwrap();
+        id.into()
+    }
+
+    pub fn new_from_free() -> Option<Self> {
+        let id = FREE_APP_IDS.lock().unwrap().pop();
+        if let Some(id) = id {
+            USED_APP_IDS.lock().unwrap().push(id);
+            return Some(id.into());
+        }
+        None
+    }
+
+    pub fn as_bytes(&self) -> &[u8] {
+        self.0.as_bytes()
     }
 }

@@ -2,10 +2,11 @@ mod activity_manager;
 mod client_id;
 mod macros;
 mod route;
+mod sessions;
 
 use axum::{
     Router,
-    routing::{any, get},
+    routing::{any, get, post},
 };
 
 const BIND_ENDPOINT: &str = "0.0.0.0:5579";
@@ -20,6 +21,7 @@ async fn main() {
 
     let app = Router::new()
         .route("/", get(route::index))
+        .route("/set-presence", post(route::set_presence))
         .route("/ws", any(route::upgrade_handler));
 
     let listener = tokio::net::TcpListener::bind(BIND_ENDPOINT).await.unwrap();
