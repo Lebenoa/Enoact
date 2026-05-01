@@ -24,7 +24,7 @@ It can display up to 4 different activities with different app name (if you need
    }
    ```
 
-   [Example](https://github.com/Lebenoa/Enoact-bext/blob/master/src/shared/youtube.js#L39-L62)
+   [Example](https://github.com/Lebenoa/Enoact-Browser-Extensions/blob/master/src/shared/youtube.ts#L52-L79)
 </details>
 
 <details>
