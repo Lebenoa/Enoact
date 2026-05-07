@@ -64,19 +64,32 @@ impl ClientId {
     pub fn new() -> Self {
         let id = FREE_APP_IDS.lock().unwrap().pop();
         if let Some(id) = id {
-            USED_APP_IDS.lock().unwrap().push(id);
+            {
+                let mut lock = USED_APP_IDS.lock().unwrap();
+                lock.push(id);
+                tracing::debug!("{lock:#?}");
+            }
             tracing::debug!("Acquired `{id}`");
             return id.into();
         }
 
-        let id = USED_APP_IDS.lock().unwrap().pop().unwrap();
+        let id = if let Some(id) = USED_APP_IDS.lock().unwrap().pop() {
+            id
+        } else {
+            tracing::warn!("No free app IDs available, using used app ID instead");
+            panic!("No free app IDs available, using used app ID instead")
+        };
         id.into()
     }
 
     pub fn new_from_free() -> Option<Self> {
         let id = FREE_APP_IDS.lock().unwrap().pop();
         if let Some(id) = id {
-            USED_APP_IDS.lock().unwrap().push(id);
+            {
+                let mut lock = USED_APP_IDS.lock().unwrap();
+                lock.push(id);
+                tracing::debug!("{lock:#?}");
+            }
             tracing::debug!("Acquired `{id}`");
             return Some(id.into());
         }
