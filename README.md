@@ -50,7 +50,7 @@ It can display up to 4 different activities with different app name (if you need
 1. Clone this repo
    
 > [!IMPORTANT]  
-> Web UI is currently required to build final executable
+> Web UI is currently required to build final executable and I don't see why not to included Web UI
 
 ### Build Web UI
 
